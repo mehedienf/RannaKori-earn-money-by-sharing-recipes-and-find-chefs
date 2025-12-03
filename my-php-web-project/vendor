@@ -1,0 +1,4 @@
+The vendor directory is typically created and managed by Composer, and it does not contain any files that you would manually create. Therefore, this directory will be intentionally left blank.
+
+vendor
+# This directory is intentionally left blank.

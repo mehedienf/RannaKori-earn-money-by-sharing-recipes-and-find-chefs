@@ -1,12 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recipe Detail - Ranna-Kori</title>
-  <link rel="stylesheet" href="../css/style.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
+<?php include __DIR__ . '/includes/header.php'; ?>
+
 <body>
   <!-- Header -->
   <header>
@@ -321,14 +314,4 @@
   </section>
 
   <!-- Footer -->
-  <footer>
-    <div class="container">
-      <div class="footer-bottom">
-        <p>&copy; 2025 Ranna-Kori. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
-
-  <script src="../js/main.js"></script>
-</body>
-</html>
+  <?php include __DIR__ . '/includes/footer.php'; ?>
