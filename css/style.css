@@ -1,7 +1,6 @@
 /* ============================================
    Ranna-Kori - Main CSS Stylesheet
    ============================================ */
-
 * {
   margin: 0;
   padding: 0;
@@ -138,17 +137,18 @@ nav a:hover {
   display: flex;
   align-items: center;
   background: var(--light-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 25px;
-  padding: 8px 15px;
+  /* border: 1px solid var(--border-color); */
+  border-radius: 5px;
+  padding: 2px 2px;
 }
 
-.search-box input {
+.search-input {
   border: none;
   background: transparent;
   outline: none;
   width: 200px;
   font-size: 14px;
+  border-radius: 15px;
 }
 
 .btn-login {
@@ -873,4 +873,25 @@ footer {
   .nav-right {
     gap: 10px;
   }
+}
+
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.star-rating label:hover,
+.star-rating label:hover ~ label,
+.star-rating input:checked ~ label {
+    color: #ffd700 !important;
 }

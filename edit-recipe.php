@@ -3,98 +3,119 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 require __DIR__ . '/config/db.php';
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
 
 if (empty($_SESSION['user_id'])) {
-    echo "YOU MUST BE LOGGED IN TO EDIT A RECIPE<br>";
-    echo '<a href="login.php">Login</a>';
+    header('Location: login.php');
     exit;
 }
 
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-if ($id <= 0) {
-    echo "INVALID RECIPE ID";
-    exit;
-}
+$id = (int)($_GET['id'] ?? 0);
+$error = '';
 
-// আগে DB থেকে recipe টা আনবো, যেন form এ পুরোনো মান দেখানো যায়
-try {
-    $stmt = $pdo->prepare(
-        'SELECT * FROM recipes WHERE id = ?'
-    );
-    $stmt->execute([$id]);
-    $recipe = $stmt->fetch();
-} catch (PDOException $e) {
-    die('DB ERROR: ' . $e->getMessage());
-}
+// Fetch recipe
+$stmt = $pdo->prepare('SELECT * FROM recipes WHERE id = ? AND user_id = ?');
+$stmt->execute([$id, $_SESSION['user_id']]);
+$recipe = $stmt->fetch();
 
 if (!$recipe) {
-    echo "RECIPE NOT FOUND";
-    exit;
+    die('Recipe not found');
 }
 
-// author check
-if ($recipe['user_id'] != $_SESSION['user_id']) {
-    echo "YOU ARE NOT ALLOWED TO EDIT THIS RECIPE";
-    exit;
-}
+// Fetch categories
+$stmt = $pdo->prepare('SELECT id, name, icon FROM categories ORDER BY name');
+$stmt->execute();
+$categories = $stmt->fetchAll();
 
-// POST এ update
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $title        = trim($_POST['title'] ?? '');
-    $description  = trim($_POST['description'] ?? '');
-    $ingredients  = trim($_POST['ingredients'] ?? '');
-    $instructions = trim($_POST['instructions'] ?? '');
-
-    if ($title === '' || $description === '' || $ingredients === '' || $instructions === '') {
-        echo "ALL FIELDS REQUIRED<br>";
+// Update
+if ($_POST) {
+    $title = trim($_POST['title']);
+    $description = trim($_POST['description']);
+    $category_id = (int)($_POST['category_id'] ?? 0);
+    $ingredients = trim($_POST['ingredients']);
+    $instructions = trim($_POST['instructions']);
+    $imagePath = $recipe['image'];
+    
+    // New image upload
+    if (!empty($_FILES['image']['name'])) {
+        $uploadDir = __DIR__ . '/uploads/';
+        if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
+        
+        $filename = time() . '_' . $_FILES['image']['name'];
+        move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $filename);
+        $imagePath = 'uploads/' . $filename;
+    }
+    
+    if ($title && $ingredients && $instructions && $category_id) {
+        $stmt = $pdo->prepare('UPDATE recipes SET title=?, description=?, category_id=?, image=?, ingredients=?, instructions=? WHERE id=?');
+        $stmt->execute([$title, $description, $category_id, $imagePath, $ingredients, $instructions, $id]);
+        
+        header('Location: recipe-details.php?id=' . $id);
+        exit;
     } else {
-        try {
-            $stmt = $pdo->prepare(
-                'UPDATE recipes
-                 SET title = ?, description = ?, ingredients = ?, instructions = ?
-                 WHERE id = ? AND user_id = ?'
-            );
-            $ok = $stmt->execute([
-                $title,
-                $description,
-                $ingredients,
-                $instructions,
-                $id,
-                $_SESSION['user_id']
-            ]);
-
-            if ($ok) {
-                // detail পেইজে ফিরে যাই
-                header('Location: recipe-details.php?id=' . $id);
-                exit;
-            } else {
-                echo "UPDATE FAILED<br>";
-            }
-        } catch (PDOException $e) {
-            echo "DB ERROR: " . $e->getMessage();
-        }
+        $error = "All fields required";
     }
 }
 ?>
 
-<form method="post" action="">
-    <input type="text" name="title" placeholder="Title"
-           value="<?php echo htmlspecialchars($recipe['title']); ?>"><br>
 
-    <textarea name="description" placeholder="Description"><?php
-        echo htmlspecialchars($recipe['description']);
-    ?></textarea><br>
 
-    <textarea name="ingredients" placeholder="Ingredients"><?php
-        echo htmlspecialchars($recipe['ingredients']);
-    ?></textarea><br>
+<main>
+    <section class="container" style="max-width: 700px; margin: 40px auto;">
+        <h1>Edit Recipe</h1>
+        
+        <?php if ($error): ?>
+            <div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
+                ❌ <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+        
+        <form method="post" enctype="multipart/form-data">
+            <div style="margin-bottom: 16px;">
+                <label>Title:</label><br>
+                <input type="text" name="title" required value="<?php echo htmlspecialchars($recipe['title']); ?>" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div style="margin-bottom: 16px;">
+                <label>Description:</label><br>
+                <textarea name="description" rows="3" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"><?php echo htmlspecialchars($recipe['description']); ?></textarea>
+            </div>
+            
+            <div style="margin-bottom: 16px;">
+                <label>Category:</label><br>
+                <select name="category_id" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="">-- Select a category --</option>
+                    <?php foreach ($categories as $cat): ?>
+                        <option value="<?php echo $cat['id']; ?>" <?php echo $recipe['category_id'] == $cat['id'] ? 'selected' : ''; ?>>
+                            <?php echo $cat['icon']; ?> <?php echo htmlspecialchars($cat['name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 16px;">
+                <label>Image:</label><br>
+                <?php if ($recipe['image']): ?>
+                    <img src="<?php echo $recipe['image']; ?>" style="max-width: 200px; margin: 10px 0;"><br>
+                <?php endif; ?>
+                <input type="file" name="image" accept="image/*">
+            </div>
+            
+            <div style="margin-bottom: 16px;">
+                <label>Ingredients:</label><br>
+                <textarea name="ingredients" rows="6" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"><?php echo htmlspecialchars($recipe['ingredients']); ?></textarea>
+            </div>
+            
+            <div style="margin-bottom: 16px;">
+                <label>Instructions:</label><br>
+                <textarea name="instructions" rows="8" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"><?php echo htmlspecialchars($recipe['instructions']); ?></textarea>
+            </div>
+            
+            <button type="submit" style="background: #4CAF50; color: white; padding: 12px 24px; border: none; cursor: pointer;">
+                Update
+            </button>
+            <a href="recipe-details.php?id=<?php echo $id; ?>">Cancel</a>
+        </form>
+    </section>
+</main>
 
-    <textarea name="instructions" placeholder="Instructions"><?php
-        echo htmlspecialchars($recipe['instructions']);
-    ?></textarea><br>
-
-    <button type="submit">Save Changes</button>
-</form>

@@ -1,235 +1,174 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+// 1. Database connection FIRST
+require __DIR__ . '/config/db.php';
+
+// 2. Session SECOND
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+?>
+
 <?php include __DIR__ . '/includes/header.php'; ?>
 
+<main>
   <!-- ============================================
        Hero Section
        ============================================ -->
-  <section class="hero" id="home">
+  <section style="background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 80px 20px; text-align: center;">
     <div class="container">
-      <h1>Welcome to Ranna-Kori</h1>
-      <p>Share your favorite Bengali recipes and earn real money</p>
-      <div class="hero-buttons">
-        <button class="btn-primary">Explore Recipes</button>
-        <button class="btn-secondary">Share Your Recipe</button>
+      <h1 style="font-size: 3rem; margin-bottom: 16px;">🍳 Welcome to Ranna-Kori</h1>
+      <p style="font-size: 1.2rem; margin-bottom: 32px;">Share your favorite Bengali recipes and earn points</p>
+      <div style="display: flex; gap: 16px; justify-content: center;">
+        <a href="recipes.php" style="background: white; color: #4CAF50; padding: 12px 32px; border-radius: 4px; text-decoration: none; font-weight: bold;">
+          Explore Recipes
+        </a>
+        <?php if (!empty($_SESSION['user_id'])): ?>
+          <a href="add-recipe.php" style="background: transparent; color: white; padding: 12px 32px; border: 2px solid white; border-radius: 4px; text-decoration: none; font-weight: bold;">
+            Share Your Recipe
+          </a>
+        <?php else: ?>
+          <a href="register.php" style="background: transparent; color: white; padding: 12px 32px; border: 2px solid white; border-radius: 4px; text-decoration: none; font-weight: bold;">
+            Create Account
+          </a>
+        <?php endif; ?>
       </div>
     </div>
   </section>
 
   <!-- ============================================
-       Featured Recipes
+       Featured Recipes Section
        ============================================ -->
-  <section class="section category-section" id="recipes">
-    <div class="container">
-      <h2 class="section-title">Featured Recipes</h2>
+  <section style="padding: 60px 20px; background: #f5f5f5;">
+    <div class="container" style="max-width: 1200px; margin: 0 auto;">
+      <h2 style="font-size: 2rem; margin-bottom: 40px; text-align: center;">⭐ Featured Recipes</h2>
       
-      <div class="recipe-grid">
-        <!-- Recipe Card 1 -->
-        <div class="recipe-card">
-          <div class="recipe-image">
-            🍛
-            <div class="recipe-badge">Popular</div>
-          </div>
-          <div class="recipe-content">
-            <h3 class="recipe-title">Chicken Biriyani</h3>
-            <div class="recipe-meta">
-              <span class="meta-item">⏱️ 45 mins</span>
-              <span class="meta-item">👥 4 servings</span>
-              <span class="meta-item">💰 350 Tk</span>
-            </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+        <?php
+        // Fetch featured recipes
+        try {
+            $query = 'SELECT r.id, r.title, r.description, r.image, r.created_at, r.user_id, 
+                             u.name AS author_name
+                      FROM recipes r 
+                      JOIN users u ON r.user_id = u.id 
+                      ORDER BY r.created_at DESC 
+                      LIMIT 6';
             
-            <div class="recipe-author">
-              <div class="author-avatar">RK</div>
-              <div class="author-info">
-                <div class="author-name">Raisa Khan</div>
-                <div class="author-date">2 days ago</div>
-              </div>
+            $stmt = $pdo->prepare($query);
+            $stmt->execute();
+            $recipes = $stmt->fetchAll();
+            
+            // Get like counts for each recipe
+            foreach ($recipes as &$recipe) {
+                $stmtLikes = $pdo->prepare('SELECT COUNT(*) as count FROM likes WHERE recipe_id = ?');
+                $stmtLikes->execute([$recipe['id']]);
+                $likeResult = $stmtLikes->fetch();
+                $recipe['like_count'] = $likeResult['count'] ?? 0;
+            }
+            
+            if (!empty($recipes)):
+                foreach ($recipes as $recipe):
+        ?>
+        <!-- Recipe Card -->
+        <article style="background: white; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.3s;">
+          
+          <!-- Recipe Image -->
+          <?php if (!empty($recipe['image'])): ?>
+            <img src="<?php echo htmlspecialchars($recipe['image']); ?>" 
+                 style="width: 100%; height: 200px; object-fit: cover;">
+          <?php else: ?>
+            <div style="width: 100%; height: 200px; background: #ddd; display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+              🍳
             </div>
-
-            <div class="recipe-rating">
-              <div class="stars">
-                <span>★★★★★</span> (128 reviews)
-              </div>
-            </div>
-
-            <div class="recipe-footer">
-              <button class="btn-like">❤️ 245</button>
-              <button class="btn-view">View Recipe</button>
+          <?php endif; ?>
+          
+          <!-- Recipe Info -->
+          <div style="padding: 16px;">
+            <h3 style="margin: 0 0 8px 0;">
+              <a href="recipe-details.php?id=<?php echo (int)$recipe['id']; ?>" style="text-decoration: none; color: #333;">
+                <?php echo htmlspecialchars($recipe['title']); ?>
+              </a>
+            </h3>
+            
+            <p style="color: #666; font-size: 0.9rem; margin: 0 0 8px 0;">
+              By <strong><?php echo htmlspecialchars($recipe['author_name']); ?></strong>
+            </p>
+            
+            <?php if (!empty($recipe['description'])): ?>
+              <p style="color: #555; font-size: 0.9rem; margin: 0 0 12px 0;">
+                <?php echo htmlspecialchars(substr($recipe['description'], 0, 70)); ?>...
+              </p>
+            <?php endif; ?>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <p style="color: #ff4444; margin: 0; font-weight: bold;">
+                ❤️ <?php echo (int)$recipe['like_count']; ?> Likes
+              </p>
+              <a href="recipe-details.php?id=<?php echo (int)$recipe['id']; ?>" 
+                 style="background: #4CAF50; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
+                View
+              </a>
             </div>
           </div>
+        </article>
+        <?php 
+                endforeach;
+            else:
+        ?>
+        <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+          <p style="color: #666; font-size: 1.1rem;">No recipes yet. Be the first to share!</p>
+          <a href="add-recipe.php" style="background: #4CAF50; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; display: inline-block; margin-top: 16px;">
+            Add Recipe
+          </a>
         </div>
+        <?php endif; ?>
+        <?php 
+        } catch (PDOException $e) {
+            echo "<div style='color: red; padding: 20px; grid-column: 1 / -1;'><strong>Error:</strong> " . htmlspecialchars($e->getMessage()) . "</div>";
+        }
+        ?>
+      </div>
+      
+      <div style="text-align: center; margin-top: 40px;">
+        <a href="recipes.php" style="background: #4CAF50; color: white; padding: 12px 32px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 1.1rem;">
+          View All Recipes →
+        </a>
+      </div>
+    </div>
+  </section>
 
-        <!-- Recipe Card 2 -->
-        <div class="recipe-card">
-          <div class="recipe-image">
-            🍲
-            <div class="recipe-badge">New</div>
-          </div>
-          <div class="recipe-content">
-            <h3 class="recipe-title">Fish Curry</h3>
-            <div class="recipe-meta">
-              <span class="meta-item">⏱️ 30 mins</span>
-              <span class="meta-item">👥 5 servings</span>
-              <span class="meta-item">💰 280 Tk</span>
-            </div>
-            
-            <div class="recipe-author">
-              <div class="author-avatar">SB</div>
-              <div class="author-info">
-                <div class="author-name">Shafiqul Bahar</div>
-                <div class="author-date">1 day ago</div>
-              </div>
-            </div>
-
-            <div class="recipe-rating">
-              <div class="stars">
-                <span>★★★★☆</span> (45 reviews)
-              </div>
-            </div>
-
-            <div class="recipe-footer">
-              <button class="btn-like">❤️ 156</button>
-              <button class="btn-view">View Recipe</button>
-            </div>
-          </div>
+  <!-- ============================================
+       Points & Rewards Section
+       ============================================ -->
+  <section style="padding: 60px 20px; background: white;">
+    <div class="container" style="max-width: 1200px; margin: 0 auto;">
+      <h2 style="font-size: 2rem; margin-bottom: 40px; text-align: center;">💰 How to Earn Points</h2>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+        <div style="background: #f0f8f0; padding: 30px; border-radius: 8px; text-align: center; border-left: 4px solid #4CAF50;">
+          <div style="font-size: 2.5rem; margin-bottom: 12px;">📝</div>
+          <h3 style="margin-bottom: 8px;">Post Recipe</h3>
+          <p style="color: #666; font-size: 1.2rem; font-weight: bold; margin: 0;">+50 Points</p>
         </div>
-
-        <!-- Recipe Card 3 -->
-        <div class="recipe-card">
-          <div class="recipe-image">
-            🍚
-            <div class="recipe-badge">Trending</div>
-          </div>
-          <div class="recipe-content">
-            <h3 class="recipe-title">Khichuri</h3>
-            <div class="recipe-meta">
-              <span class="meta-item">⏱️ 20 mins</span>
-              <span class="meta-item">👥 3 servings</span>
-              <span class="meta-item">💰 120 Tk</span>
-            </div>
-            
-            <div class="recipe-author">
-              <div class="author-avatar">NR</div>
-              <div class="author-info">
-                <div class="author-name">Nasrin Roy</div>
-                <div class="author-date">3 days ago</div>
-              </div>
-            </div>
-
-            <div class="recipe-rating">
-              <div class="stars">
-                <span>★★★★★</span> (312 reviews)
-              </div>
-            </div>
-
-            <div class="recipe-footer">
-              <button class="btn-like">❤️ 512</button>
-              <button class="btn-view">View Recipe</button>
-            </div>
-          </div>
+        
+        <div style="background: #f0f8f0; padding: 30px; border-radius: 8px; text-align: center; border-left: 4px solid #4CAF50;">
+          <div style="font-size: 2.5rem; margin-bottom: 12px;">💬</div>
+          <h3 style="margin-bottom: 8px;">Write Review</h3>
+          <p style="color: #666; font-size: 1.2rem; font-weight: bold; margin: 0;">+10 Points</p>
         </div>
-
-        <!-- Recipe Card 4 -->
-        <div class="recipe-card">
-          <div class="recipe-image">
-            🍜
-            <div class="recipe-badge">Popular</div>
-          </div>
-          <div class="recipe-content">
-            <h3 class="recipe-title">Luchi & Alu Curry</h3>
-            <div class="recipe-meta">
-              <span class="meta-item">⏱️ 35 mins</span>
-              <span class="meta-item">👥 4 servings</span>
-              <span class="meta-item">💰 200 Tk</span>
-            </div>
-            
-            <div class="recipe-author">
-              <div class="author-avatar">AM</div>
-              <div class="author-info">
-                <div class="author-name">Amina Mirza</div>
-                <div class="author-date">4 days ago</div>
-              </div>
-            </div>
-
-            <div class="recipe-rating">
-              <div class="stars">
-                <span>★★★★★</span> (89 reviews)
-              </div>
-            </div>
-
-            <div class="recipe-footer">
-              <button class="btn-like">❤️ 178</button>
-              <button class="btn-view">View Recipe</button>
-            </div>
-          </div>
+        
+        <div style="background: #f0f8f0; padding: 30px; border-radius: 8px; text-align: center; border-left: 4px solid #4CAF50;">
+          <div style="font-size: 2.5rem; margin-bottom: 12px;">❤️</div>
+          <h3 style="margin-bottom: 8px;">Get Liked</h3>
+          <p style="color: #666; font-size: 1.2rem; font-weight: bold; margin: 0;">+1 Point</p>
         </div>
-
-        <!-- Recipe Card 5 -->
-        <div class="recipe-card">
-          <div class="recipe-image">
-            🍰
-            <div class="recipe-badge">Sweet</div>
-          </div>
-          <div class="recipe-content">
-            <h3 class="recipe-title">Mishti Dohi</h3>
-            <div class="recipe-meta">
-              <span class="meta-item">⏱️ 15 mins</span>
-              <span class="meta-item">👥 6 servings</span>
-              <span class="meta-item">💰 150 Tk</span>
-            </div>
-            
-            <div class="recipe-author">
-              <div class="author-avatar">FR</div>
-              <div class="author-info">
-                <div class="author-name">Farida Rahman</div>
-                <div class="author-date">5 days ago</div>
-              </div>
-            </div>
-
-            <div class="recipe-rating">
-              <div class="stars">
-                <span>★★★★☆</span> (234 reviews)
-              </div>
-            </div>
-
-            <div class="recipe-footer">
-              <button class="btn-like">❤️ 389</button>
-              <button class="btn-view">View Recipe</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recipe Card 6 -->
-        <div class="recipe-card">
-          <div class="recipe-image">
-            🍛
-            <div class="recipe-badge">Vegetarian</div>
-          </div>
-          <div class="recipe-content">
-            <h3 class="recipe-title">Begun Fry</h3>
-            <div class="recipe-meta">
-              <span class="meta-item">⏱️ 25 mins</span>
-              <span class="meta-item">👥 4 servings</span>
-              <span class="meta-item">💰 100 Tk</span>
-            </div>
-            
-            <div class="recipe-author">
-              <div class="author-avatar">JS</div>
-              <div class="author-info">
-                <div class="author-name">Jahanara Singh</div>
-                <div class="author-date">6 days ago</div>
-              </div>
-            </div>
-
-            <div class="recipe-rating">
-              <div class="stars">
-                <span>★★★★★</span> (156 reviews)
-              </div>
-            </div>
-
-            <div class="recipe-footer">
-              <button class="btn-like">❤️ 234</button>
-              <button class="btn-view">View Recipe</button>
-            </div>
-          </div>
+        
+        <div style="background: #f0f8f0; padding: 30px; border-radius: 8px; text-align: center; border-left: 4px solid #4CAF50;">
+          <div style="font-size: 2.5rem; margin-bottom: 12px;">💳</div>
+          <h3 style="margin-bottom: 8px;">Redeem</h3>
+          <p style="color: #666; font-size: 1.2rem; font-weight: bold; margin: 0;">100 Points = 10 TK</p>
         </div>
       </div>
     </div>
@@ -238,91 +177,50 @@
   <!-- ============================================
        Categories Section
        ============================================ -->
-  <section class="section category-section" id="categories">
-    <div class="container">
-      <h2 class="section-title">Recipe Categories</h2>
+  <section style="padding: 60px 20px; background: white;">
+    <div class="container" style="max-width: 1200px; margin: 0 auto;">
+      <h2 style="font-size: 2rem; margin-bottom: 40px; text-align: center;">📚 Browse by Category</h2>
       
-      <div class="category-grid">
-        <div class="category-card">
-          <div class="category-icon">🍚</div>
-          <div class="category-name">Rice Dishes</div>
-        </div>
-        <div class="category-card">
-          <div class="category-icon">🍲</div>
-          <div class="category-name">Curries</div>
-        </div>
-        <div class="category-card">
-          <div class="category-icon">🥘</div>
-          <div class="category-name">Main Course</div>
-        </div>
-        <div class="category-card">
-          <div class="category-icon">🥗</div>
-          <div class="category-name">Salads</div>
-        </div>
-        <div class="category-card">
-          <div class="category-icon">🍰</div>
-          <div class="category-name">Desserts</div>
-        </div>
-        <div class="category-card">
-          <div class="category-icon">🥣</div>
-          <div class="category-name">Breakfast</div>
-        </div>
-        <div class="category-card">
-          <div class="category-icon">🍜</div>
-          <div class="category-name">Soups</div>
-        </div>
-        <div class="category-card">
-          <div class="category-icon">🥟</div>
-          <div class="category-name">Snacks</div>
-        </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+        <?php
+        try {
+            $stmt = $pdo->prepare('SELECT id, name, slug, icon FROM categories ORDER BY name');
+            $stmt->execute();
+            $allCategories = $stmt->fetchAll();
+            
+            foreach ($allCategories as $cat):
+                // Count recipes in this category
+                $countStmt = $pdo->prepare('SELECT COUNT(*) as count FROM recipes WHERE category_id = ?');
+                $countStmt->execute([$cat['id']]);
+                $count = $countStmt->fetch()['count'];
+        ?>
+        <a href="category.php?slug=<?php echo htmlspecialchars($cat['slug']); ?>" 
+           style="display: block; background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 30px; border-radius: 8px; text-align: center; text-decoration: none; transition: transform 0.3s;">
+            <div style="font-size: 2.5rem; margin-bottom: 12px;"><?php echo $cat['icon']; ?></div>
+            <div style="font-weight: bold; margin-bottom: 8px;"><?php echo htmlspecialchars($cat['name']); ?></div>
+            <div style="font-size: 0.9rem; opacity: 0.9;"><?php echo $count; ?> recipe<?php echo $count !== 1 ? 's' : ''; ?></div>
+        </a>
+        <?php endforeach; ?>
+        <?php } catch (PDOException $e) { ?>
+            <div style="color: red;">Error loading categories</div>
+        <?php } ?>
       </div>
     </div>
   </section>
 
   <!-- ============================================
-       Points & Rewards Section
+       CTA Section
        ============================================ -->
-  <section class="points-section">
+  <section style="background: linear-gradient(135deg, #4CAF50, #45a049); color: white; padding: 60px 20px; text-align: center;">
     <div class="container">
-      <h2 class="points-title">How to Earn Points & Money</h2>
-      
-      <div class="points-grid">
-        <div class="points-card">
-          <div class="points-amount">50</div>
-          <div class="points-description">Points for posting a recipe</div>
-        </div>
-        <div class="points-card">
-          <div class="points-amount">10</div>
-          <div class="points-description">Points for writing a review</div>
-        </div>
-        <div class="points-card">
-          <div class="points-amount">1</div>
-          <div class="points-description">Point for each like received</div>
-        </div>
-        <div class="points-card">
-          <div class="points-amount">100 = 10 Tk</div>
-          <div class="points-description">Redeem points to real money</div>
-        </div>
-      </div>
+      <h2 style="font-size: 2rem; margin-bottom: 16px;">Ready to Start Cooking?</h2>
+      <p style="font-size: 1.1rem; margin-bottom: 32px;">Share your recipes and earn real money today!</p>
+      <a href="<?php echo !empty($_SESSION['user_id']) ? 'add-recipe.php' : 'register.php'; ?>" 
+         style="background: white; color: #4CAF50; padding: 12px 40px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 1.1rem;">
+        <?php echo !empty($_SESSION['user_id']) ? '➕ Add Recipe' : '📝 Create Account'; ?>
+      </a>
     </div>
   </section>
+</main>
 
-  <!-- ============================================
-       Call to Action Section
-       ============================================ -->
-  <section class="section" style="background: white; text-align: center;">
-    <div class="container">
-      <h2 class="section-title">Ready to Share Your Recipes?</h2>
-      <p style="font-size: 18px; margin-bottom: 30px; color: var(--text-light);">
-        Join thousands of cooking enthusiasts and earn money from your culinary skills
-      </p>
-      <button class="btn-primary" style="font-size: 16px; padding: 15px 40px;">
-        Create Your Account Today
-      </button>
-    </div>
-  </section>
-
-  <!-- ============================================
-       Footer
-       ============================================ -->
-  <?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/includes/footer.php'; ?>

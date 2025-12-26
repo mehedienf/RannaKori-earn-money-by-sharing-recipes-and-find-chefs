@@ -7,6 +7,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name  = trim($_POST['name'] ?? '');
     $email = trim($_POST['email'] ?? '');
@@ -30,11 +31,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ok = $stmt->execute([$name, $email, $passwordHash]);
 
         if ($ok) {
-            $_SESSION['user_id'] = $pdo->lastInsertId();
+            $userId = $pdo->lastInsertId();
+            $_SESSION['user_id'] = $userId;
             $_SESSION['user_name'] = $name;
             $_SESSION['user_email'] = $email;
+            $_SESSION['user_points'] = 0;  // ← নতুন user এর জন্য 0
 
-            // এখানে কোনো echo নেই, direct redirect
             header('Location: index.php');
             exit;
         } else {
@@ -48,10 +50,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
-<form method="post" action="">
-    <input type="text" name="name" placeholder="Name">
-    <input type="email" name="email" placeholder="Email">
-    <input type="password" name="password" placeholder="Password">
-    <input type="password" name="confirm_password" placeholder="Confirm Password">
-    <button type="submit">Submit</button>
-</form>
+<?php include __DIR__ . '/includes/header.php'; ?>
+
+<main>
+    <form method="post" action="">
+        <input type="text" name="name" placeholder="Name">
+        <input type="email" name="email" placeholder="Email">
+        <input type="password" name="password" placeholder="Password">
+        <input type="password" name="confirm_password" placeholder="Confirm Password">
+        <button type="submit">Submit</button>
+    </form>
+</main>
+<?php include __DIR__ . '/includes/footer.php'; ?>
