@@ -2,52 +2,29 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+
 require __DIR__ . '/config/db.php';
 session_start();
 
-// Get search query
-$search = trim($_GET['search'] ?? '');
+$search = $_GET['search'] ?? '';
 $recipes = [];
 
-// Fetch recipes based on search
-try {
-    $searchTerm = '%' . $search . '%';
-    
-    if (!empty($search)) {
-        // Search in title
-        $query = 'SELECT r.id, r.title, r.description, r.image, r.created_at, r.user_id, 
-                         u.name AS author_name
-                  FROM recipes r 
-                  JOIN users u ON r.user_id = u.id 
-                  WHERE r.title LIKE ? 
-                  ORDER BY r.created_at DESC';
-        
-        $stmt = $pdo->prepare($query);
-        $stmt->execute([$searchTerm]);
-        $recipes = $stmt->fetchAll();
-    } else {
-        // Show all recipes
-        $query = 'SELECT r.id, r.title, r.description, r.image, r.created_at, r.user_id, 
-                         u.name AS author_name
-                  FROM recipes r 
-                  JOIN users u ON r.user_id = u.id 
-                  ORDER BY r.created_at DESC';
-        
-        $stmt = $pdo->prepare($query);
-        $stmt->execute();
-        $recipes = $stmt->fetchAll();
-    }
-    
-    // Get like counts separately
-    foreach ($recipes as &$recipe) {
-        $stmt = $pdo->prepare('SELECT COUNT(*) as count FROM likes WHERE recipe_id = ?');
-        $stmt->execute([$recipe['id']]);
-        $likeCount = $stmt->fetch();
-        $recipe['like_count'] = $likeCount['count'];
-    }
-    
-} catch (PDOException $e) {
-    echo "<div style='color: red; padding: 20px;'><strong>Database Error:</strong> " . htmlspecialchars($e->getMessage()) . "</div>";
+if ($search) {
+    $stmt = $pdo->prepare('SELECT r.*, u.name as author_name, u.avatar as author_avatar FROM recipes r JOIN users u ON r.user_id = u.id WHERE r.title LIKE ? ORDER BY r.created_at DESC');
+    $stmt->execute(['%' . $search . '%']);
+} else {
+    $stmt = $pdo->prepare('SELECT r.*, u.name as author_name, u.avatar as author_avatar FROM recipes r JOIN users u ON r.user_id = u.id ORDER BY r.created_at DESC');
+    $stmt->execute();
+}
+
+$recipes = $stmt->fetchAll();
+
+foreach ($recipes as &$r) {
+    $s = $pdo->prepare('SELECT COUNT(*) as cnt FROM likes WHERE recipe_id = ?');
+    $s->execute([$r['id']]);
+    $r['like_count'] = $s->fetch()['cnt'] ?? 0;
 }
 ?>
 
@@ -56,90 +33,70 @@ try {
 <main>
     <section class="container" style="max-width: 1000px; margin: 40px auto;">
         <h1>🍳 Recipes</h1>
-        <!-- Add Recipe Button (if logged in) -->
-        <?php if (isset($_SESSION['user_id'])): ?>
+
+        <?php if (!empty($_SESSION['user_id'])): ?>
             <div style="margin-bottom: 24px;">
-            <a href="add-recipe.php" style="display: inline-block; background: #4CAF50; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-size: 1rem;">
-                ➕ Add New Recipe
-            </a>
+                <a href="add-recipe.php" style="display: inline-block; background: #4CAF50; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: 600;">
+                    ➕ Add New Recipe
+                </a>
             </div>
         <?php endif; ?>
-        <!-- Search Bar -->
-        <form method="get" action="recipes.php" style="margin-bottom: 32px;">
+
+        <form method="get" style="margin-bottom: 32px;">
             <div style="display: flex; gap: 8px;">
-                <input type="text" name="search" placeholder="Search recipes..." 
-                       value="<?php echo htmlspecialchars($search); ?>"
-                       style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem;">
-                <button type="submit" style="background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem;">
-                    🔍 Search
-                </button>
-                <?php if (!empty($search)): ?>
-                    <a href="recipes.php" style="background: #ddd; color: black; padding: 12px 24px; border: none; border-radius: 4px; text-decoration: none;">
-                        ✕ Clear
-                    </a>
+                <input type="text" name="search" placeholder="Search recipes..." value="<?php echo htmlspecialchars($search); ?>" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 4px;">
+                <button type="submit" style="background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">🔍 Search</button>
+                <?php if ($search): ?>
+                    <a href="recipes.php" style="background: #999; color: white; padding: 12px 24px; border-radius: 4px; text-decoration: none; font-weight: 600;">✕ Clear</a>
                 <?php endif; ?>
             </div>
         </form>
-        
-        <!-- Search Results -->
-        <?php if (!empty($search)): ?>
-            <p style="color: #666; margin-bottom: 16px; font-size: 1.1rem;">
-                <strong>Found <?php echo count($recipes); ?> recipe(s) for "<?php echo htmlspecialchars($search); ?>"</strong>
-            </p>
-        <?php endif; ?>
-        
-        <!-- Recipes Grid -->
+
         <?php if (empty($recipes)): ?>
-            <div style="background: #f5f5f5; padding: 40px; text-align: center; border-radius: 8px;">
-                <p style="font-size: 1.2rem; color: #666;">
-                    <?php echo !empty($search) ? '❌ No recipes found' : '📝 No recipes yet'; ?>
-                </p>
-                <p style="color: #999; margin-top: 8px;">
-                    <?php echo !empty($search) ? 'Try a different search keyword' : 'Be the first to add a recipe!'; ?>
-                </p>
+            <div style="background: #f5f5f5; padding: 60px 20px; text-align: center; border-radius: 8px;">
+                <p style="font-size: 1.3rem; color: #666;">📝 No recipes found</p>
             </div>
         <?php else: ?>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
-                <?php foreach ($recipes as $recipe): ?>
-                    <article style="border: 1px solid #ddd; padding: 16px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        
-                        <?php if (!empty($recipe['image'])): ?>
-                            <img src="<?php echo htmlspecialchars($recipe['image']); ?>" 
-                                 style="width: 100%; height: 200px; object-fit: cover; border-radius: 6px; margin-bottom: 12px;">
-                        <?php else: ?>
-                            <div style="width: 100%; height: 200px; background: #ddd; border-radius: 6px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; font-size: 3rem;">
-                                🍳
-                            </div>
-                        <?php endif; ?>
-                        
-                        <h3 style="margin: 0 0 8px 0;">
-                            <a href="recipe-details.php?id=<?php echo (int)$recipe['id']; ?>" style="text-decoration: none; color: #333;">
-                                <?php echo htmlspecialchars($recipe['title']); ?>
-                            </a>
-                        </h3>
-                        
-                        <p style="color: #666; font-size: 0.9rem; margin: 0 0 8px 0;">
-                            By <strong><?php echo htmlspecialchars($recipe['author_name']); ?></strong>
-                        </p>
-                        
-                        <?php if (!empty($recipe['description'])): ?>
-                            <p style="color: #555; font-size: 0.9rem; margin: 0 0 8px 0;">
-                                <?php echo htmlspecialchars(substr($recipe['description'], 0, 60)); ?>...
-                            </p>
-                        <?php endif; ?>
-                        
-                        <p style="color: #ff4444; margin: 0 0 12px 0; font-weight: bold;">
-                            ❤️ <?php echo (int)($recipe['like_count'] ?? 0); ?> Likes
-                        </p>
-                        
-                        <a href="recipe-details.php?id=<?php echo (int)$recipe['id']; ?>" 
-                           style="display: inline-block; background: #4CAF50; color: white; padding: 10px 16px; border-radius: 4px; text-decoration: none;">
-                            View Recipe →
-                        </a>
-                    </article>
-                <?php endforeach; ?>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;">
+                <?php
+                foreach ($recipes as $recipe) {
+                    echo '<div style="background: white; border: 1px solid #eee; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">';
+
+                    echo '<div style="height: 200px; background: #f0f0f0; overflow: hidden;">';
+                    if ($recipe['image']) {
+                        echo '<img src="' . htmlspecialchars($recipe['image']) . '" style="width: 100%; height: 100%; object-fit: cover;" alt="' . htmlspecialchars($recipe['title']) . '">';
+                    } else {
+                        echo '<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 3rem;">🍳</div>';
+                    }
+                    echo '</div>';
+
+                    echo '<div style="padding: 16px;">';
+                    echo '<h3 style="margin: 0 0 12px 0;"><a href="recipe-details.php?id=' . $recipe['id'] . '" style="color: #333; text-decoration: none;">' . htmlspecialchars($recipe['title']) . '</a></h3>';
+
+                    echo '<div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;">';
+                    if ($recipe['author_avatar']) {
+                        echo '<img src="' . htmlspecialchars($recipe['author_avatar']) . '" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover;">';
+                    } else {
+                        echo '<div style="width: 36px; height: 36px; border-radius: 50%; background: #ddd; display: flex; align-items: center; justify-content: center;">👤</div>';
+                    }
+                    echo '<div><a href="profile.php?user_id=' . $recipe['user_id'] . '" style="color: #4CAF50; text-decoration: none; font-weight: 600; display: block;">' . htmlspecialchars($recipe['author_name']) . '</a><span style="color: #999; font-size: 0.8rem;">' . date('M d, Y', strtotime($recipe['created_at'])) . '</span></div>';
+                    echo '</div>';
+
+                    if ($recipe['description']) {
+                        echo '<p style="color: #666; font-size: 0.9rem; margin: 0 0 12px 0;">' . htmlspecialchars(substr($recipe['description'], 0, 70)) . '...</p>';
+                    }
+
+                    echo '<div style="display: flex; justify-content: space-between;">';
+                    echo '<span style="color: #ff4444; font-weight: 600;">❤️ ' . $recipe['like_count'] . '</span>';
+                    echo '<a href="recipe-details.php?id=' . $recipe['id'] . '" style="background: #4CAF50; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">View</a>';
+                    echo '</div>';
+
+                    echo '</div></div>';
+                }
+                ?>
             </div>
         <?php endif; ?>
     </section>
 </main>
+
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -1,10 +1,8 @@
-/* ============================================
-   Ranna-Kori - Main CSS Stylesheet
-   ============================================ */
+/* Ranna-Kori - Main CSS Stylesheet */
 * {
   margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+  padding: 0px;
+  /* box-sizing: border-box; */
 }
 
 :root {
@@ -21,16 +19,14 @@
   --shadow-hover: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* ============================================
-   General Styles
-   ============================================ */
+/* General Styles */
 
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background-color: var(--light-bg);
   color: var(--text-dark);
   line-height: 1.6;
@@ -71,35 +67,25 @@ button:hover {
   padding: 60px 0;
 }
 
-/* ============================================
-   Header & Navigation
-   ============================================ */
+/* Header & Navigation */
 
-header {
-  background: white;
-  box-shadow: var(--shadow);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.header-container {
+/* .header-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 15px 0;
-}
+} */
 
-.logo {
+/* .logo {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 28px;
   font-weight: bold;
   color: var(--primary-color);
-}
+} */
 
-.logo-icon {
+/* .logo-icon {
   width: 35px;
   height: 35px;
   background: var(--primary-color);
@@ -109,48 +95,69 @@ header {
   justify-content: center;
   color: white;
   font-size: 20px;
+} */
+
+header {
+  padding: 10px;
+  margin: 5px;
+  position: sticky;
+  top: 0;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  /* background: transparent; */
+  backdrop-filter: blur(30px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-nav ul {
+nav {
   display: flex;
-  list-style: none;
+  align-items: center;
   gap: 30px;
 }
 
 nav a {
-  color: var(--text-dark);
-  font-weight: 500;
-  transition: color 0.3s ease;
+  padding: 10px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: #212121;
+  font-weight: 600;
+  opacity: 0.6;
+  font-size: 18px;
+  transition: all 0.3s ease;
 }
 
 nav a:hover {
-  color: var(--primary-color);
-}
-
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.search-box {
-  display: flex;
-  align-items: center;
-  background: var(--light-bg);
-  /* border: 1px solid var(--border-color); */
-  border-radius: 5px;
-  padding: 2px 2px;
+  color: rgb(255, 38, 0);
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
 }
 
 .search-input {
-  border: none;
+  border: 1px solid var(--border-color);
+  border-radius: 30px;
   background: transparent;
-  outline: none;
+  /* outline: none; */
   width: 200px;
-  font-size: 14px;
-  border-radius: 15px;
+  height: 30px;
+  font-size: 17px;
+  padding: 6px 12px;
+
 }
 
+.search-button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 20px;
+}
+/* padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px; width: 200px; */
 .btn-login {
   background: white;
   color: var(--primary-color);
@@ -195,7 +202,11 @@ nav a:hover {
    ============================================ */
 
 .hero {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--secondary-color) 100%
+  );
   color: white;
   padding: 100px 0;
   text-align: center;
@@ -412,7 +423,11 @@ nav a:hover {
 }
 
 .category-card {
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   color: white;
   padding: 30px;
   border-radius: 10px;
@@ -692,6 +707,9 @@ footer {
   color: white;
   padding: 50px 0 20px;
   margin-top: 60px;
+  bottom: 0;
+  z-index: 1000;
+  margin-bottom: 0px;
 }
 
 .footer-content {
@@ -876,22 +894,22 @@ footer {
 }
 
 .star-rating {
-    display: flex;
-    flex-direction: row-reverse;
-    justify-content: flex-end;
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
 }
 
 .star-rating input {
-    display: none;
+  display: none;
 }
 
 .star-rating label {
-    cursor: pointer;
-    transition: color 0.2s;
+  cursor: pointer;
+  transition: color 0.2s;
 }
 
 .star-rating label:hover,
 .star-rating label:hover ~ label,
 .star-rating input:checked ~ label {
-    color: #ffd700 !important;
+  color: #ffd700 !important;
 }

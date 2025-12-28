@@ -86,6 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
+<?php include __DIR__ . '/includes/header.php'; ?>
+
 <main>
     <section class="container" style="max-width: 600px; margin: 40px auto;">
         <h1>Edit Profile</h1>
@@ -137,3 +139,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
     </section>
 </main>
+
+<?php include __DIR__ . '/includes/footer.php'; ?>

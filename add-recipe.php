@@ -55,7 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->query("UPDATE users SET points = points + 50 WHERE id = " . $_SESSION['user_id']);
             $_SESSION['user_points'] = ($_SESSION['user_points'] ?? 0) + 50;
             
-            header('Location: recipe-details.php?id=' . $pdo->lastInsertId());
+            // Redirect to recipes page instead of recipe-details
+            header('Location: recipes.php');
             exit;
         } catch (PDOException $e) {
             $error = $e->getMessage();
