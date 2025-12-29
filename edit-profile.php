@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Update database
             try {
                 if (!empty($password)) {
-                    // Update with new password - HASH করতে হবে
+                    // Update with new password
                     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
                     $stmt = $pdo->prepare('UPDATE users SET name = ?, email = ?, avatar = ?, password = ? WHERE id = ?');
                     $stmt->execute([$name, $email, $avatarPath, $hashedPassword, $_SESSION['user_id']]);

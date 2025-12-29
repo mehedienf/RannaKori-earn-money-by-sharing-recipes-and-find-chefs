@@ -74,14 +74,19 @@ if ($isOwnProfile) {
                 <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 16px;">
                     <h2 style="margin: 0; color: #4CAF50;">⭐ <?php echo $user['points']; ?></h2>
                     <p style="margin: 8px 0 0 0; color: #666;">Total Points</p>
+                    <?php if ($isOwnProfile && $user['points'] > 0): ?>
+                        <a href="withdraw.php" style="display: inline-block; margin-top: 12px; background: #FF9800; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+                            💰 Withdraw Money
+                        </a>
+                    <?php endif; ?>
                 </div>
 
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 8px; flex-direction: column;">
                     <?php if ($isOwnProfile): ?>
-                        <a href="edit-profile.php" style="background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 4px; text-decoration: none; cursor: pointer;">
+                        <a href="edit-profile.php" style="background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 4px; text-decoration: none; cursor: pointer; text-align: center; font-weight: 600;">
                             ✏️ Edit Profile
                         </a>
-                        <a href="logout.php" style="background: #f44336; color: white; padding: 12px 24px; border: none; border-radius: 4px; text-decoration: none; cursor: pointer;">
+                        <a href="logout.php" style="background: #f44336; color: white; padding: 12px 24px; border: none; border-radius: 4px; text-decoration: none; cursor: pointer; text-align: center; font-weight: 600;">
                             🚪 Logout
                         </a>
                     <?php else: ?>

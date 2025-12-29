@@ -6,10 +6,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// সব session data clear
+// Clear all session data
 $_SESSION = [];
 session_destroy();
 
-// home এ পাঠিয়ে দেই
+// Redirect to home
 header('Location: index.php');
 exit;

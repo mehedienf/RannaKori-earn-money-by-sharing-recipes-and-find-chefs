@@ -8,7 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 try {
-    // Top users fetch (points অনুযায়ী descending)
+    // Fetch top users (ordered by points descending)
     $stmt = $pdo->query(
         'SELECT 
             u.id,
@@ -50,7 +50,7 @@ function getRankBadge($rank) {
         </p>
 
         <?php if (empty($topUsers)): ?>
-            <p>কোনো user এখনো নেই।</p>
+            <p>No users yet.</p>
         <?php else: ?>
             <table class="leaderboard-table" style="width: 100%; border-collapse: collapse;">
                 <thead>
@@ -66,7 +66,7 @@ function getRankBadge($rank) {
                     <?php 
                     $rank = 1;
                     foreach ($topUsers as $user): 
-                        // নিজের row highlight করা
+                        // Highlight own row
                         $isCurrentUser = !empty($_SESSION['user_id']) && $_SESSION['user_id'] == $user['id'];
                         $rowStyle = $isCurrentUser 
                             ? 'background: #fffbf0; font-weight: bold; border-left: 4px solid #ffd700;' 

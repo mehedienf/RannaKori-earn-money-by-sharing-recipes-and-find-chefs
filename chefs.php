@@ -82,15 +82,15 @@ try {
                             </h3>
 
                             <p style="color: #666; font-size: 0.9rem; margin: 0 0 12px 0;">
-                                <strong><?php echo $chef['experience_years']; ?></strong> years experience
+                                <strong><?php echo !empty($chef['experience_years']) ? htmlspecialchars($chef['experience_years']) : '0'; ?></strong> years experience
                             </p>
 
                             <p style="color: #555; font-size: 0.85rem; margin: 0 0 12px 0; line-height: 1.4;">
-                                <?php echo htmlspecialchars(substr($chef['bio'], 0, 100)); ?>...
+                                <?php echo htmlspecialchars(substr($chef['bio'] ?? 'Passionate about cooking', 0, 100)); ?>...
                             </p>
 
                             <p style="color: #666; font-size: 0.85rem; margin: 0 0 12px 0;">
-                                <strong>Specialties:</strong> <?php echo htmlspecialchars(substr($chef['specialties'], 0, 80)); ?>
+                                <strong>Specialties:</strong> <?php echo htmlspecialchars(substr($chef['specialties'] ?? 'Bengali Cuisine', 0, 80)); ?>
                             </p>
 
                             <!-- Stats -->

@@ -5,13 +5,13 @@ ini_set('display_errors', 1);
 require __DIR__ . '/config/db.php';
 session_start();
 
-// Fake login (test এর জন্য)
+// Fake login (for testing)
 if (empty($_SESSION['user_id'])) {
-    $_SESSION['user_id'] = 1; // তোমার user ID দাও
+    $_SESSION['user_id'] = 1; // Your user ID
     $_SESSION['user_name'] = 'Test User';
 }
 
-$recipe_id = 2; // তোমার একটা valid recipe ID দাও
+$recipe_id = 2; // Your valid recipe ID
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     echo "<h2 style='color: green;'>POST RECEIVED!</h2>";
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($ok) {
                 echo "<h3 style='color: blue;'>DATABASE INSERT SUCCESS!</h3>";
                 
-                // Check করি insert হয়েছে কিনা
+                // Check if insert was successful
                 $stmt = $pdo->query('SELECT * FROM reviews ORDER BY id DESC LIMIT 1');
                 $lastReview = $stmt->fetch();
                 echo "<pre>";

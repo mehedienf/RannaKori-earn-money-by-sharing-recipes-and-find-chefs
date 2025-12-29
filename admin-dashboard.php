@@ -46,6 +46,10 @@ try {
     // Active users (total for now)
     $stmt = $pdo->query('SELECT COUNT(*) as count FROM users WHERE status = "active"');
     $activeUsers = $stmt->fetch()['count'];
+
+    // Pending withdrawals
+    $stmt = $pdo->query('SELECT COUNT(*) as count FROM withdrawals WHERE status = "pending"');
+    $pendingWithdrawals = $stmt->fetch()['count'];
 } catch (PDOException $e) {
     echo "Error: " . $e->getMessage();
 }
@@ -102,13 +106,20 @@ try {
                 <div style="font-size: 2rem; font-weight: bold; margin-bottom: 4px;"><?php echo $activeUsers; ?></div>
                 <div style="font-size: 0.9rem; opacity: 0.9;">Active (Last 7 Days)</div>
             </div>
+
+            <!-- Pending Withdrawals -->
+            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <div style="font-size: 2.5rem; margin-bottom: 8px;">💰</div>
+                <div style="font-size: 2rem; font-weight: bold; margin-bottom: 4px;"><?php echo $pendingWithdrawals; ?></div>
+                <div style="font-size: 0.9rem; opacity: 0.9;">Pending Withdrawals</div>
+            </div>
         </div>
 
         <!-- Admin Controls -->
         <h2 style="margin-top: 0;">Admin Controls</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
 
-            <a href="chef-requests.php" style="
+            <a href="admin-chefs.php" style="
                 background: #4CAF50;
                 color: white;
                 padding: 20px;
@@ -120,7 +131,7 @@ try {
                 onmouseover="this.style.background='#45a049'; this.style.transform='scale(1.05)'"
                 onmouseout="this.style.background='#4CAF50'; this.style.transform='scale(1)'">
                 <div style="font-size: 2rem; margin-bottom: 8px;">👨‍🍳</div>
-                <div style="font-weight: 600;">Manage Chef Requests</div>
+                <div style="font-weight: 600;">Manage Chefs</div>
                 <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 8px;">
                     Pending: <strong><?php echo $pendingChefs; ?></strong>
                 </div>
@@ -162,8 +173,8 @@ try {
                 </div>
             </a>
 
-            <a href="admin-reports.php" style="
-                background: #f44336;
+            <a href="admin-withdrawals.php" style="
+                background: #00BCD4;
                 color: white;
                 padding: 20px;
                 border-radius: 8px;
@@ -171,32 +182,15 @@ try {
                 text-align: center;
                 transition: all 0.3s ease;
             "
-                onmouseover="this.style.background='#da190b'; this.style.transform='scale(1.05)'"
-                onmouseout="this.style.background='#f44336'; this.style.transform='scale(1)'">
-                <div style="font-size: 2rem; margin-bottom: 8px;">⚠️</div>
-                <div style="font-weight: 600;">User Reports</div>
+                onmouseover="this.style.background='#0097a7'; this.style.transform='scale(1.05)'"
+                onmouseout="this.style.background='#00BCD4'; this.style.transform='scale(1)'">
+                <div style="font-size: 2rem; margin-bottom: 8px;">💰</div>
+                <div style="font-weight: 600;">Manage Withdrawals</div>
                 <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 8px;">
-                    Review reports
+                    Pending: <strong><?php echo $pendingWithdrawals; ?></strong>
                 </div>
             </a>
 
-            <a href="admin-settings.php" style="
-                background: #9C27B0;
-                color: white;
-                padding: 20px;
-                border-radius: 8px;
-                text-decoration: none;
-                text-align: center;
-                transition: all 0.3s ease;
-            "
-                onmouseover="this.style.background='#7b1fa2'; this.style.transform='scale(1.05)'"
-                onmouseout="this.style.background='#9C27B0'; this.style.transform='scale(1)'">
-                <div style="font-size: 2rem; margin-bottom: 8px;">⚙️</div>
-                <div style="font-weight: 600;">Settings</div>
-                <div style="font-size: 0.85rem; opacity: 0.9; margin-top: 8px;">
-                    Platform settings
-                </div>
-            </a>
         </div>
     </section>
 </main>

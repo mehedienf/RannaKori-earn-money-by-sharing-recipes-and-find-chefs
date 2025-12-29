@@ -12,8 +12,8 @@ $search = $_GET['search'] ?? '';
 $recipes = [];
 
 if ($search) {
-    $stmt = $pdo->prepare('SELECT r.*, u.name as author_name, u.avatar as author_avatar FROM recipes r JOIN users u ON r.user_id = u.id WHERE r.title LIKE ? ORDER BY r.created_at DESC');
-    $stmt->execute(['%' . $search . '%']);
+    $stmt = $pdo->prepare('SELECT r.*, u.name as author_name, u.avatar as author_avatar FROM recipes r JOIN users u ON r.user_id = u.id WHERE r.title LIKE ? OR r.description LIKE ? OR r.ingredients LIKE ? OR r.instructions LIKE ? ORDER BY r.created_at DESC');
+    $stmt->execute(['%' . $search . '%', '%' . $search . '%', '%' . $search . '%', '%' . $search . '%']);
 } else {
     $stmt = $pdo->prepare('SELECT r.*, u.name as author_name, u.avatar as author_avatar FROM recipes r JOIN users u ON r.user_id = u.id ORDER BY r.created_at DESC');
     $stmt->execute();

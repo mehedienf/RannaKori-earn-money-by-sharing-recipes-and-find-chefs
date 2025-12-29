@@ -97,15 +97,15 @@ try {
                 </h1>
                 
                 <p style="margin: 0 0 16px 0; font-size: 1.1rem; opacity: 0.95;">
-                    👨‍🍳 Chef with <strong><?php echo $chef['experience_years']; ?></strong> years of experience
+                    👨‍🍳 Chef with <strong><?php echo htmlspecialchars(!empty($chef['experience_years']) ? $chef['experience_years'] : '0'); ?></strong> years of experience
                 </p>
 
                 <p style="margin: 0 0 16px 0; line-height: 1.6; font-size: 1rem;">
-                    <?php echo htmlspecialchars($chef['bio']); ?>
+                    <?php echo htmlspecialchars(!empty($chef['bio']) ? $chef['bio'] : 'Passionate about sharing delicious recipes!'); ?>
                 </p>
 
                 <p style="margin: 0 0 16px 0; font-size: 0.95rem;">
-                    <strong>Specialties:</strong> <?php echo htmlspecialchars($chef['specialties']); ?>
+                    <strong>Specialties:</strong> <?php echo htmlspecialchars(!empty($chef['specialties']) ? $chef['specialties'] : 'Bengali Cuisine'); ?>
                 </p>
 
                 <!-- Stats -->

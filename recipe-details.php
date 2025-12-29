@@ -6,7 +6,7 @@ require __DIR__ . '/config/db.php';
 session_start();
 
 $id = (int)($_GET['id'] ?? 0);
-$reviewError = ''; // এই লাইন যোগ করো
+$reviewError = '';
 $reviewSuccess = isset($_GET['success']) ? "✅ Review submitted! You earned +10 points." : '';
 
 // Fetch all recipes for sidebar or other uses
